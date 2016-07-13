@@ -27,51 +27,54 @@ from provider import ContentProvider
 
 class HejbejseContentProvider(ContentProvider):
 	
-	od=''
-	do=''
-
 	def __init__(self,username=None,password=None,filter=None):
-		ContentProvider.__init__(self,'hejbejse.tv','http://www.kynychova.cz/',username,password,filter)
+		ContentProvider.__init__(self,'hejbejse.tv','http://www.kynychova-tv.cz/',username,password,filter)
 		opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.LWPCookieJar()))
 		urllib2.install_opener(opener)
 
 	def capabilities(self):
-		return ['resolve','categories']
-		
+		return ['resolve','categories','list']
 		
 	def categories(self):
+		page = util.parse_html('http://www.kynychova-tv.cz/index.php?id=5')
 		result = []
-		#
-		data = util.substr(util.request(self.base_url+'index.php?id=17'),'<div id="sidebar">','</div>')
-		pattern = '<a href=\"(?P<url>[^\"]+)[^>]+>(?P<name>[^<]+)' 
-		for m in re.finditer(pattern,data,re.IGNORECASE | re.DOTALL ):
-			item = self.video_item()
-			item['title'] = m.group('name')
-			item['url'] = m.group('url')
+		for title,uri in [(x.h3.text,x.h3.a['href']) for x in page.select('div.entry5') if x.h3]:
+			item = self.dir_item()
+			item['title'] = title
+			item['url'] = uri
 			result.append(item)
 		return result
-		
-                       
+
+	def list(self, url):
+		url = self._url(url)
+		page = util.parse_html(url)
+		result = []
+		for title,uri in [(x.img['title'],x['href']) for x in page.select('div.entry3')[0].findAll('a')]:
+			item = self.video_item()
+			item['title'] = title
+			item['url'] = uri
+			result.append(item)
+		return result
 	
 	def resolve(self,item,captcha_cb=None,select_cb=None):
 		item = item.copy()
 		url = self._url(item['url'])
-		data = util.request(url)
-		data = util.substr(data,'<div id="content">','<div class="clear">')
-		resolved = resolver.findstreams(data,['flash[V|v]ars=\"(?P<url>id=.+?)\" ','<embed( )src=\"(?P<url>[^\"]+)','<object(.+?)data=\"(?P<url>[^\"]+)','<iframe(.+?)src=[\"\'](?P<url>.+?)[\'\"]'])
-                result = []
-                try:
+		page = util.parse_html(url)
+		result = []
+		data=str(page.select('div.entry3 > center')[0])
+		resolved = resolver.findstreams(data,['<iframe(.+?)src=[\"\'](?P<url>.+?)[\'\"]'])
+		try:
 			for i in resolved:
 				item = self.video_item()
 				item['title'] = i['name']
 				item['url'] = i['url']
 				item['quality'] = i['quality']
 				item['surl'] = i['surl']
-				result.append(item)  
+				result.append(item)	 
 		except:
 			print '===Unknown resolver==='
 			
-                if len(result)==1:
-                        return result[0]
-                elif len(result) > 1 and select_cb:
-                        return select_cb(result)
+		if len(result)==1:
+			return result[0]
+		elif len(result) > 1 and select_cb:
+			return select_cb(result)
