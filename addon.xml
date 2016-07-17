@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<addon id="plugin.video.hejbejse.tv" name="Hejbejse.tv" provider-name="Ivo Brhel" version="1.0.4">
+<addon id="plugin.video.hejbejse.tv" name="Hejbejse.tv" provider-name="Ivo Brhel (refactoring: Jose Riha)" version="1.0.5">
   <requires>
     <import addon="xbmc.python" version="2.1.0" />
     <import addon="script.module.stream.resolver" version="1.6.13" />
@@ -12,6 +12,7 @@
     <summary lang="cs">hejbejse.tv</summary>
     <description lang="en">Watch online hejbejse.tv</description>
     <description lang="cs">Sledujte online hejbejse.tv</description>
+    <description lang="sk">Sledujte online hejbejse.tv</description>
     <platform>all</platform>
     <source>https://github.com/kodi-czsk/plugin.video.hejbejse.tv</source>
   </extension>
